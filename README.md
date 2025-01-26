@@ -9,7 +9,7 @@ To add OwlTree to your Unity project, download the latest unity package [here](h
 
 Thats It!
 
-You can read more about how to use OwlTree in Unity from the [wiki](https://github.com/CaptainToTo/owl-tree-unity/wiki/OwlTree-Unity-Add%E2%80%90On).
+You can read more about how to use OwlTree in Unity from the [wiki]([https://github.com/CaptainToTo/owl-tree-unity/wiki/OwlTree-Unity-Add%E2%80%90On](https://github.com/CaptainToTo/owl-tree-unity/wiki)).
 
 ## Making A Connection
 
