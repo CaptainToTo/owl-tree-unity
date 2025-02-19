@@ -1,3 +1,3 @@
-[submodule "Assets/OwlTree/Framework"]
-	path = Assets/OwlTree/Framework
+[submodule "OwlTree.Unity/Assets/OwlTree.Unity/Framework"]
+	path = OwlTree.Unity/Assets/OwlTree.Unity/Framework
 	url = https://github.com/CaptainToTo/owl-tree.git
