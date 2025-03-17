@@ -88,6 +88,8 @@ namespace OwlTree.Unity
         /// </summary>
         [HideInInspector] public UnityEvent<Bandwidth> OnBandwidthReport;
 
+        [HideInInspector] public UnityEvent<Tick> OnResimulation;
+
         /// <summary>
         /// Whether this connection is active. Will be false for clients if 
         /// they have been disconnected from the server.
@@ -121,19 +123,20 @@ namespace OwlTree.Unity
             if (args == null)
                 args = _args.GetArgs();
             if (args.bandwidthReporter == null)
-                args.bandwidthReporter = (bandwidth) => OnBandwidthReport.Invoke(bandwidth);
+                args.bandwidthReporter = (bandwidth) => OnBandwidthReport?.Invoke(bandwidth);
             Connection = new Connection(args);
 
-            Connection.OnClientConnected += (id) => OnClientConnected.Invoke(id);
-            Connection.OnClientDisconnected += (id) => OnClientDisconnected.Invoke(id);
+            Connection.OnClientConnected += (id) => OnClientConnected?.Invoke(id);
+            Connection.OnClientDisconnected += (id) => OnClientDisconnected?.Invoke(id);
             Connection.OnLocalDisconnect += (id) => {
-                OnLocalDisconnect.Invoke(id);
+                OnLocalDisconnect?.Invoke(id);
                 _spawner?.DespawnAll();
                 Destroy(gameObject);
             };
-            Connection.OnHostMigration += (id) => OnHostMigration.Invoke(id);
-            Connection.OnObjectSpawn += (id) => OnObjectSpawn.Invoke(id);
-            Connection.OnObjectDespawn += (id) => OnObjectDespawn.Invoke(id);
+            Connection.OnHostMigration += (id) => OnHostMigration?.Invoke(id);
+            Connection.OnObjectSpawn += (id) => OnObjectSpawn?.Invoke(id);
+            Connection.OnObjectDespawn += (id) => OnObjectDespawn?.Invoke(id);
+            Connection.OnResimulation += (tick) => OnResimulation?.Invoke(tick);
 
             StartCoroutine(WaitForReady(args));
 
@@ -250,6 +253,27 @@ namespace OwlTree.Unity
         public bool Threaded => Connection.Threaded;
 
         /// <summary>
+        /// The simulation system this session is using.
+        /// </summary>
+        public SimulationSystem SimulationSystem => Connection.SimulationSystem;
+        
+        /// <summary>
+        /// The current simulation tick assigned to RPCs sent from this connection. 
+        /// If simulation management is disabled, this will always be 0.
+        /// </summary>
+        public Tick LocalTick => Connection.LocalTick;
+        /// <summary>
+        /// The current simulation tick of received RPCs currently being run. This will usually be behind
+        /// LocalTick. If simulation management is disabled, this will always be 0.
+        /// </summary>
+        public Tick PresentTick => Connection.PresentTick;
+
+        /// <summary>
+        /// The expected rate at which <c>ExecuteQueue()</c> should be called in milliseconds.
+        /// </summary>
+        public int TickRate => Connection.TickRate;
+
+        /// <summary>
         /// Whether this connection represents a server or client.
         /// </summary>
         public NetRole NetRole => Connection.NetRole;
@@ -275,6 +299,16 @@ namespace OwlTree.Unity
         public bool IsRelay => Connection.IsRelay;
 
         /// <summary>
+        /// Returns true if this session is server authoritative.
+        /// </summary>
+        public bool IsServerAuthoritative => Connection.IsServerAuthoritative;
+
+        /// <summary>
+        /// Returns true if this session is relayed peer-to-peer.
+        /// </summary>
+        public bool IsRelayed => Connection.IsRelayed;
+
+        /// <summary>
         /// The TCP port the server connection managing this session is listening to.
         /// </summary>
         public int ServerTcpPort => Connection.ServerTcpPort;
@@ -290,6 +324,12 @@ namespace OwlTree.Unity
         /// The local UDP port this connection is listening to.
         /// </summary>
         public int LocalUdpPort => Connection.LocalUdpPort;
+
+        /// <summary>
+        /// The general packet millisecond latency of the connection. Servers report the worst latency among all connected clients. 
+        /// Latency measures the transit time of packets received, not ping which is round-trip time.
+        /// </summary>
+        public int Latency => Connection.Latency;
 
         /// <summary>
         /// The app this connection is associated with.

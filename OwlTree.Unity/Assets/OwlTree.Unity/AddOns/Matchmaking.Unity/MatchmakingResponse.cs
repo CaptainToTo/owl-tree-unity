@@ -85,6 +85,17 @@ namespace OwlTree.Matchmaking.Unity
         public ServerType serverType;
 
         /// <summary>
+        /// Decide how simulation latency and synchronization is handled.
+        /// </summary>
+        public SimulationSystemRequest simulationSystem;
+        
+        /// <summary>
+        /// Assumed simulation tick speed in milliseconds. Used to accurately allocate sufficient simulation buffer space.
+        /// <c>ExecuteQueue()</c> should called at this rate.
+        /// </summary>
+        public int simulationTickRate;
+
+        /// <summary>
         /// Serializes the response to a JSON string.
         /// </summary>
         public string Serialize()

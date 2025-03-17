@@ -52,6 +52,18 @@ controlled with the migratable argument, and will be set to true for you.")]
         [Tooltip("The byte length of read and write buffers.")]
         public int bufferSize = 2048;
 
+        [Serializable]
+        public enum SimulationSystem
+        {
+            None,
+            Lockstep,
+            Rollback,
+            Snapshot
+        }
+
+        [Tooltip("")]
+        public SimulationSystem simulationSystem;
+
         [Tooltip(@"The version of Owl Tree this connection is running on. 
 This value can be lowered from the default to use older formats of Owl Tree.")]
         public ushort owlTreeVersion = 1;
@@ -92,6 +104,8 @@ Reading and writing will be done at a regular frequency, as defined by the threa
             [Tooltip(@"Output any connection attempts received if this connection is a server.
 Or any connection attempts made if this connection is a client.")]
             public bool connectionAttempts;
+            [Tooltip("Output when simulation management events occur.")]
+            public bool simulationEvents;
             [Tooltip("On creating this connection, output all of the NetworkObject type ids it is aware of.")]
             public bool allTypeIds;
             [Tooltip("On creating this connection, output all of the RPC protocols it is aware of.")]
@@ -125,6 +139,7 @@ Or any connection attempts made if this connection is a client.")]
                 if (spawnEvents) rules = rules.SpawnEvents();
                 if (clientEvents) rules = rules.ClientEvents();
                 if (connectionAttempts) rules = rules.ConnectionAttempts();
+                if (simulationEvents) rules = rules.SimulationEvents();
                 if (allTypeIds) rules = rules.AllTypeIds();
                 if (allRpcProtocols) rules = rules.AllRpcProtocols();
                 if (rpcCalls) rules = rules.RpcCalls();
@@ -163,6 +178,8 @@ Or any connection attempts made if this connection is a client.")]
                 connectionRequestLimit = connectionRequestLimit,
                 connectionRequestTimeout = connectionRequestTimeout,
                 bufferSize = bufferSize,
+                simulationSystem = (OwlTree.SimulationSystem)simulationSystem,
+                simulationTickRate = 20,
                 owlTreeVersion = owlTreeVersion,
                 minOwlTreeVersion = minOwlTreeVersion,
                 appVersion = appVersion,
