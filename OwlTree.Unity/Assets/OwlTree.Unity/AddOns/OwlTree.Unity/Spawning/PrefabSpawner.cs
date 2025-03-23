@@ -143,6 +143,7 @@ namespace OwlTree.Unity
             SendSpawn(id, netObj.Id);
 
             netObj.InvokeOnSpawn();
+            OnObjectSpawn?.Invoke(netObj);
 
             return netObj;
         }
@@ -166,6 +167,7 @@ namespace OwlTree.Unity
             netObj.Connection = _connection;
             Connection.Maps.Add(netObj.Id, netObj);
             netObj.InvokeOnSpawn();
+            OnObjectSpawn?.Invoke(netObj);
         }
 
         /// <summary>
@@ -210,6 +212,7 @@ namespace OwlTree.Unity
             netObj.Connection = _connection;
             Connection.Maps.Add(netObj.Id, netObj);
             netObj.InvokeOnSpawn();
+            OnObjectSpawn?.Invoke(netObj);
         }
 
         /// <summary>

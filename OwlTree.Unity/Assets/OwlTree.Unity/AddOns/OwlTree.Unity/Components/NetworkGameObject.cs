@@ -44,7 +44,7 @@ public class NetworkGameObject : MonoBehaviour
         var behaviours = GetComponents<NetworkBehaviour>();
         foreach (var b in behaviours)
             b.OnSpawn();
-        OnSpawn.Invoke(this);
+        OnSpawn?.Invoke(this);
     }
 
     /// <summary>
@@ -57,7 +57,7 @@ public class NetworkGameObject : MonoBehaviour
         var behaviours = GetComponents<NetworkBehaviour>();
         foreach (var b in behaviours)
             b.OnDespawn();
-        OnDespawn.Invoke(this);
+        OnDespawn?.Invoke(this);
     }
 }
 

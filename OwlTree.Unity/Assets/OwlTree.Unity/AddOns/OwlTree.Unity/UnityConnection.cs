@@ -88,6 +88,9 @@ namespace OwlTree.Unity
         /// </summary>
         [HideInInspector] public UnityEvent<Bandwidth> OnBandwidthReport;
 
+        /// <summary>
+        /// Invoked when the simulation control system triggers a resimulation. Provides the tick that will be resimulated from.
+        /// </summary>
         [HideInInspector] public UnityEvent<Tick> OnResimulation;
 
         /// <summary>
@@ -162,7 +165,6 @@ namespace OwlTree.Unity
                     {
                         _spawner = s;
                         _spawner.Initialize(this, _args.prefabs);
-                        Debug.Log("got spawner");
                         break;
                     }
                 }
