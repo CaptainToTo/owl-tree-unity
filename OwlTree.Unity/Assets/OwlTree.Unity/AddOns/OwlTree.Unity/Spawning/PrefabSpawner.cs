@@ -139,6 +139,7 @@ namespace OwlTree.Unity
             netObj.Prefab = id;
             netObj.Connection = _connection;
             Connection.Maps.Add(netObj.Id, netObj);
+            GameObject.DontDestroyOnLoad(netObj.gameObject);
 
             SendSpawn(id, netObj.Id);
 
@@ -166,6 +167,7 @@ namespace OwlTree.Unity
             netObj.Prefab = id;
             netObj.Connection = _connection;
             Connection.Maps.Add(netObj.Id, netObj);
+            GameObject.DontDestroyOnLoad(netObj.gameObject);
             netObj.InvokeOnSpawn();
             OnObjectSpawn?.Invoke(netObj);
         }
@@ -211,6 +213,7 @@ namespace OwlTree.Unity
             netObj.Id = assignedId;
             netObj.Connection = _connection;
             Connection.Maps.Add(netObj.Id, netObj);
+            GameObject.DontDestroyOnLoad(netObj.gameObject);
             netObj.InvokeOnSpawn();
             OnObjectSpawn?.Invoke(netObj);
         }
@@ -223,7 +226,6 @@ namespace OwlTree.Unity
             Connection.Maps.Remove(target.Id);
             target.InvokeOnDespawn();
             OnObjectDespawn?.Invoke(target);
-            target.Connection = null;
             SendDespawn(target.Id);
             GameObject.Destroy(target.gameObject);
         }
@@ -236,7 +238,6 @@ namespace OwlTree.Unity
             Connection.Maps.Remove(id);
             obj.InvokeOnDespawn();
             OnObjectDespawn?.Invoke(obj);
-            obj.Connection = null;
             GameObject.Destroy(obj.gameObject);
         }
 
@@ -247,9 +248,8 @@ namespace OwlTree.Unity
         {
             foreach (var obj in Objects)
             {
-                obj.OnDespawn.Invoke(obj);
+                obj.InvokeOnDespawn();
                 OnObjectDespawn?.Invoke(obj);
-                obj.Connection = null;
                 if (obj != null)
                     GameObject.Destroy(obj.gameObject);
             }

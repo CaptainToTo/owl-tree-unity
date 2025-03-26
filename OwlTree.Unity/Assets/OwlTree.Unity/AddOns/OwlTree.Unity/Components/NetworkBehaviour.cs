@@ -31,6 +31,11 @@ public abstract class NetworkBehaviour : MonoBehaviour
     public UnityConnection Connection => NetObject?.Connection;
 
     /// <summary>
+    /// Whether or not this game object is currently being managed by a connection.
+    /// </summary>
+    public bool IsActive => NetObject?.IsActive ?? false;
+
+    /// <summary>
     /// Invoked when this object is instantiated synchronously by a connection.
     /// This can be treated as a stand-in for Start().
     /// </summary>

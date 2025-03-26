@@ -164,7 +164,7 @@ namespace OwlTree.Unity
                     if (s.Connection == Connection)
                     {
                         _spawner = s;
-                        _spawner.Initialize(this, _args.prefabs);
+                        _spawner.Initialize(this, args.prefabs);
                         break;
                     }
                 }
@@ -274,6 +274,15 @@ namespace OwlTree.Unity
         /// The expected rate at which <c>ExecuteQueue()</c> should be called in milliseconds.
         /// </summary>
         public int TickRate => Connection.TickRate;
+
+        /// <summary>
+        /// Returns the number of milliseconds between two ticks. The first tick must be older than the second, otherwise 0 is returned.
+        /// </summary>
+        public int TimeBetween(Tick a, Tick b) => Connection.TimeBetween(a, b);
+        /// <summary>
+        /// Returns the number of seconds between two ticks as a float. The first tick must be older than the second, otherwise 0 is returned.
+        /// </summary>
+        public float SecondsBetween(Tick a, Tick b) => Connection.SecondsBetween(a, b);
 
         /// <summary>
         /// Whether this connection represents a server or client.

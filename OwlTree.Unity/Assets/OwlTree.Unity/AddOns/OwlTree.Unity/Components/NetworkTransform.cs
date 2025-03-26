@@ -60,7 +60,7 @@ namespace OwlTree.Unity
                 var rot = new NetworkVec4(transform.localRotation.x, transform.localRotation.y, transform.localRotation.z, transform.localRotation.w);
                 var scale = new NetworkVec3(transform.localScale.x, transform.localScale.y, transform.localScale.z);
 
-                if (_continuousSync || (nextPos - transform.localPosition).magnitude > 0.001f)
+                if (_continuousSync || (nextPos - transform.localPosition).magnitude > 0.0001f)
                     netcode.SendPosition(pos);
                 if (_syncRotation && (_continuousSync || (nextRot.eulerAngles - transform.eulerAngles).magnitude > 0.001f))
                     netcode.SendRotation(rot);
