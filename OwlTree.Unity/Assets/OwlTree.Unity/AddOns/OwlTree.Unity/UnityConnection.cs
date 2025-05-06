@@ -64,6 +64,11 @@ namespace OwlTree.Unity
         /// in a relayed peer-to-peer session.
         /// </summary>
         public UnityEvent<ClientId> OnHostMigration;
+
+        /// <summary>
+        /// Invoked when the local client connection is rejected by the server.
+        /// </summary>
+        public UnityEvent<ConnectionResponseCode> OnConnectionRejected;
         
         /// <summary>
         /// Invoked when a new NetworkObject is spawned.
@@ -113,8 +118,12 @@ namespace OwlTree.Unity
 
         void OnDestroy()
         {
-            if (Connection.IsActive)
+            _spawner?.DespawnAll();
+            if (Connection?.IsActive ?? false)
+            {
                 Connection.Disconnect();
+                Connection = null;
+            }
             _instances.Remove(this);
         }
 
@@ -133,10 +142,13 @@ namespace OwlTree.Unity
             Connection.OnClientDisconnected += (id) => OnClientDisconnected?.Invoke(id);
             Connection.OnLocalDisconnect += (id) => {
                 OnLocalDisconnect?.Invoke(id);
-                _spawner?.DespawnAll();
                 Destroy(gameObject);
             };
             Connection.OnHostMigration += (id) => OnHostMigration?.Invoke(id);
+            Connection.OnConnectionRejected += (response) => {
+                OnConnectionRejected?.Invoke(response);
+                Destroy(gameObject);
+            };
             Connection.OnObjectSpawn += (id) => OnObjectSpawn?.Invoke(id);
             Connection.OnObjectDespawn += (id) => OnObjectDespawn?.Invoke(id);
             Connection.OnResimulation += (tick) => OnResimulation?.Invoke(tick);

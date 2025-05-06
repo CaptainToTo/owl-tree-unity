@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using OwlTree;
 using OwlTree.Unity;
 using UnityEngine;
@@ -246,12 +247,13 @@ namespace OwlTree.Unity
         /// </summary>
         public void DespawnAll()
         {
-            foreach (var obj in Objects)
+            foreach (var obj in Objects.ToArray())
             {
+                if (obj == null || obj.gameObject == null)
+                    continue;
                 obj.InvokeOnDespawn();
                 OnObjectDespawn?.Invoke(obj);
-                if (obj != null)
-                    GameObject.Destroy(obj.gameObject);
+                GameObject.Destroy(obj.gameObject);
             }
             Connection.Maps.Clear<GameObjectId, NetworkGameObject>();
         }
