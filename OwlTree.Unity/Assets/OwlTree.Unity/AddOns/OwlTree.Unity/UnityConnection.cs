@@ -199,7 +199,7 @@ namespace OwlTree.Unity
 
         void FixedUpdate()
         {
-            Connection.ExecuteQueue();
+            Connection?.ExecuteQueue();
         }
 
         private PrefabSpawner _spawner = null;
