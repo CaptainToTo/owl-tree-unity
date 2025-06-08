@@ -17,7 +17,7 @@ namespace OwlTree.Unity
         /// <summary>
         /// Iterable of all PrefabSpawner instances that exist locally.
         /// </summary>
-        public static IEnumerable<PrefabSpawner> Instances => _instances;
+        internal static IEnumerable<PrefabSpawner> Instances => _instances;
 
         public override void OnSpawn()
         {

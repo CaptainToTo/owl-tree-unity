@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace OwlTree.Unity
@@ -22,6 +23,8 @@ namespace OwlTree.Unity
         {
             if (Connection.IsAuthority)
                 netcode.SetAuthority(authority);
+            else
+                throw new InvalidOperationException("Non-authority clients cannot assign shared authority of NetworkTransforms.");
         }
 
         public override void OnSpawn()
@@ -33,21 +36,52 @@ namespace OwlTree.Unity
             }
         }
 
-        [Tooltip("Lerp between position updates to create smoother movement.")]
-        [SerializeField] private bool _interpolate = false;
-        public bool Interpolate => _interpolate;
+        public override void OnDespawn()
+        {
+            if (Connection.IsAuthority && netcode != null)
+                Connection.Despawn(netcode);
+        }
+
+        [Tooltip("0 = no movement, 1 = snap to next position"), Range(0.001f, 1.0f)]
+        [SerializeField] float _lerpMultiplier = 0.6f;
+        [Tooltip("0 = no movement when predicting, 1 = snap to next prediction"), Range(0.001f, 1.0f)]
+        [SerializeField] float _predictionEasing = 0.6f;
+        [Tooltip("0 = no prediction, 1 = full prediction"), Range(0.0f, 1.0f)]
+        [SerializeField] float _predictionMult = 0.6f;
+        [Tooltip("the max number of ticks the client prediction is allowed to make"), Range(0, 100)]
+        [SerializeField] int _maxPrediction = 10;
 
         [Tooltip("Send updates even if the transform hasn't changed. This will consume more bandwidth.")]
         [SerializeField] private bool _continuousSync = false;
 
-        [Tooltip("Disable or enable local rotation synchronization.")]
+        [Tooltip("Disable or enable local rotation synchronization. Rotation will be lerped, but not predicted.")]
         [SerializeField] private bool _syncRotation = true;
-        [Tooltip("Disable or enable local scale synchronization.")]
+        [Tooltip("Disable or enable local scale synchronization. Scale will be lerped, but not predicted.")]
         [SerializeField] private bool _syncScale = false;
 
-        [HideInInspector] internal Vector3 nextPos;
-        [HideInInspector] internal Quaternion nextRot;
-        [HideInInspector] internal Vector3 nextScale;
+        [HideInInspector] internal Tick lastTick;
+        [HideInInspector] internal Tick changeTick;
+
+        [HideInInspector] internal Vector3 lastPos;
+        [HideInInspector] internal Vector3 lastPosDelta;
+        Vector3 _nextPosPrediction;
+        Vector3 _predictedPos;
+
+        [HideInInspector] internal Quaternion lastRot;
+
+        [HideInInspector] internal Vector3 lastScale;
+
+        void Update()
+        {
+            if (IsActive && Authority != Connection.LocalId)
+            {
+                transform.localPosition = Vector3.Lerp(transform.localPosition, _predictedPos, _lerpMultiplier);
+                if (_syncRotation)
+                    transform.localRotation = Quaternion.Slerp(transform.localRotation, lastRot, _lerpMultiplier);
+                if (_syncScale)
+                    transform.localScale = Vector3.Lerp(transform.localScale, lastScale, _lerpMultiplier);
+            }
+        }
 
         void FixedUpdate()
         {
@@ -56,25 +90,34 @@ namespace OwlTree.Unity
 
             if (Connection.LocalId == netcode.Authority)
             {
-                var pos = new NetworkVec3(transform.localPosition.x, transform.localPosition.y, transform.localPosition.z);
-                var rot = new NetworkVec4(transform.localRotation.x, transform.localRotation.y, transform.localRotation.z, transform.localRotation.w);
-                var scale = new NetworkVec3(transform.localScale.x, transform.localScale.y, transform.localScale.z);
+                var delta = transform.localPosition - lastPos;
 
-                if (_continuousSync || (nextPos - transform.localPosition).magnitude > 0.0001f)
-                    netcode.SendPosition(pos);
-                if (_syncRotation && (_continuousSync || (nextRot.eulerAngles - transform.eulerAngles).magnitude > 0.001f))
-                    netcode.SendRotation(rot);
-                if (_syncScale && (_continuousSync || (nextScale - transform.localScale).magnitude > 0.001f))
-                    netcode.SendScale(scale);
-                
-                nextPos = transform.localPosition;
-                nextRot = transform.localRotation;
-                nextScale = transform.localScale;
+                if (delta.magnitude > 0f || _continuousSync)
+                {
+                    netcode.SendPosition(transform.localPosition.ToNetVec3());
+                    lastPos = transform.localPosition;
+                }
+
+                var rotDelta = transform.localEulerAngles - lastRot.eulerAngles;
+                if (_syncRotation && (rotDelta.magnitude > 0f || _continuousSync))
+                {
+                    netcode.SendRotation(transform.localEulerAngles.ToNetVec3());
+                    lastRot = transform.localRotation;
+                }
+
+                var scaleDelta = transform.localScale - lastScale;
+                if (_syncScale && (scaleDelta.magnitude > 0f || _continuousSync))
+                {
+                    netcode.SendScale(transform.localScale.ToNetVec3());
+                    lastScale = transform.localScale;
+                }
             }
-            else if (_interpolate)
+            else
             {
-                transform.localPosition = Vector3.Lerp(transform.localPosition, nextPos, 0.5f);
-                transform.localRotation = Quaternion.Slerp(transform.localRotation, nextRot, 0.7f);
+                _nextPosPrediction = Vector3.Lerp(_nextPosPrediction,
+                    lastPos + (lastPosDelta * Mathf.Min(Connection.LocalTick - lastTick, _maxPrediction)),
+                    _predictionEasing * (Connection.LocalTick - changeTick));
+                _predictedPos = Vector3.Lerp(lastPos, _nextPosPrediction, _predictionMult);
             }
         }
     }
@@ -136,78 +179,54 @@ namespace OwlTree.Unity
             if (Connection.LocalId != Authority)
                 return;
 
-            var pos = new NetworkVec3(
-                transform.transform.localPosition.x, 
-                transform.transform.localPosition.y, 
-                transform.transform.localPosition.z);
-            var rot = new NetworkVec4(
-                transform.transform.localRotation.x, 
-                transform.transform.localRotation.y, 
-                transform.transform.localRotation.z, 
-                transform.transform.localRotation.w);
-            var scale = new NetworkVec3(
-                transform.transform.localScale.x, 
-                transform.transform.localScale.y, 
-                transform.transform.localScale.z);
+            var pos = transform.transform.localPosition.ToNetVec3();
+            var rot = transform.transform.localEulerAngles.ToNetVec3();
+            var scale = transform.transform.localScale.ToNetVec3();
             
             SendState(caller, pos, rot, scale);
         }
 
         [Rpc(RpcPerms.AnyToAll)]
-        public virtual void SendState([CalleeId] ClientId callee, NetworkVec3 pos, NetworkVec4 rot, NetworkVec3 scale, [CallerId] ClientId caller = default)
+        public virtual void SendState([CalleeId] ClientId callee, NetworkVec3 pos, NetworkVec3 rot, NetworkVec3 scale, [CallerId] ClientId caller = default)
         {
             if (caller != Authority)
                 return;
 
-            transform.transform.localPosition = new Vector3(pos.x, pos.y, pos.z);
-            transform.nextPos = transform.transform.localPosition;
-
-            transform.transform.localRotation = new Quaternion(rot.x, rot.y, rot.z, rot.w);
-            transform.nextRot = transform.transform.localRotation;
-
-            transform.transform.localScale = new Vector3(scale.x, scale.y, scale.z);
+            transform.lastPos = pos.ToVec3();
+            transform.lastRot = Quaternion.Euler(rot.ToVec3());
+            transform.lastScale = scale.ToVec3();
         }
 
         [Rpc(RpcPerms.AnyToAll, RpcProtocol = Protocol.Udp)]
         public virtual void SendPosition(NetworkVec3 pos, [CallerId] ClientId caller = default)
         {
-            if (caller != Authority)
+            if (caller != Authority || transform == null)
                 return;
 
-            if (transform == null)
-                return;
-            
-            if (transform.Interpolate)
-                transform.nextPos = new Vector3(pos.x, pos.y, pos.z);
-            else
-                transform.transform.localPosition = new Vector3(pos.x, pos.y, pos.z);
+            var newDelta = pos.ToVec3() - transform.lastPos;
+            if (newDelta.normalized != transform.lastPosDelta.normalized)
+                transform.changeTick = Connection.LocalTick;
+            transform.lastPosDelta = newDelta;
+            transform.lastPos = pos.ToVec3();
+            transform.lastTick = Connection.PresentTick;
         }
 
         [Rpc(RpcPerms.AnyToAll, RpcProtocol = Protocol.Udp)]
-        public virtual void SendRotation(NetworkVec4 rot, [CallerId] ClientId caller = default)
+        public virtual void SendRotation(NetworkVec3 rot, [CallerId] ClientId caller = default)
         {
-            if (caller != Authority)
+            if (caller != Authority || transform == null)
                 return;
 
-            if (transform == null)
-                return;
-
-            if (transform.Interpolate)
-                transform.nextRot = new Quaternion(rot.x, rot.y, rot.z, rot.w);
-            else
-                transform.transform.localRotation = new Quaternion(rot.x, rot.y, rot.z, rot.w);
+            transform.lastRot = Quaternion.Euler(rot.ToVec3());
         }
 
         [Rpc(RpcPerms.AnyToAll, RpcProtocol = Protocol.Udp)]
         public virtual void SendScale(NetworkVec3 scale, [CallerId] ClientId caller = default)
         {
-            if (caller != Authority)
+            if (caller != Authority || transform == null)
                 return;
 
-            if (transform == null)
-                return;
-            
-            transform.transform.localScale = new Vector3(scale.x, scale.y, scale.z);
+            transform.lastScale = scale.ToVec3();
         }
     }
 }

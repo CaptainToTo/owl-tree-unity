@@ -61,7 +61,7 @@ controlled with the migratable argument, and will be set to true for you.")]
             Snapshot
         }
 
-        [Tooltip("")]
+        [Tooltip("How the simulation buffer will be handled in the session.")]
         public SimulationSystem simulationSystem;
 
         [Tooltip(@"The version of Owl Tree this connection is running on. 
@@ -128,6 +128,8 @@ Or any connection attempts made if this connection is a client.")]
             public bool udpPostTransform;
             [Tooltip("Output any exceptions thrown during this connection's runtime.")]
             public bool exceptions;
+            [Tooltip("Output ping send, receives, and resolves.")]
+            public bool pings;
             [Tooltip("Output bars '===' to visually separate logs.")]
             public bool logSeparators;
             [Tooltip("Output a timestamp with each log message.")]
@@ -153,6 +155,7 @@ Or any connection attempts made if this connection is a client.")]
                 if (exceptions) rules = rules.Exceptions();
                 if (logSeparators) rules = rules.LogSeparators();
                 if (logTimestamp) rules = rules.LogTimestamp();
+                if (pings) rules = rules.Pings();
                 return rules;
             }
         }
