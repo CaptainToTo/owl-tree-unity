@@ -45,7 +45,7 @@ public class ConnectionRunner : MonoBehaviour
 
 Currently, the connection is configured to behave as a client, meaning you'll need a server to connect to.
 
-For local testing, OwlTree provides a simple relay server you can download from [here](https://github.com/CaptainToTo/owltree-relays/releases). This is a separate C#
+For local testing, OwlTree provides a simple relay server you can download from [here](https://github.com/CaptainToTo/owltree-relays). This is a separate C#
 program that runs on the .NET runtime. You can start the server by opening a terminal in the server project folder, and running:
 
 ```
