@@ -5,7 +5,7 @@ as well as other add-ons that will provide extra utility within Unity.
 
 ## Set-Up
 
-To add OwlTree to your Unity project, download the latest unity package [here](https://github.com/CaptainToTo/owl-tree-unity/releases/download/v0.2.0/OwlTree-Unity-v0.2.0.unitypackage), and import it into your project.
+To add OwlTree to your Unity project, download the latest unity package [here](https://github.com/CaptainToTo/owl-tree-unity/releases), and import it into your project.
 
 Thats It!
 
@@ -45,9 +45,8 @@ public class ConnectionRunner : MonoBehaviour
 
 Currently, the connection is configured to behave as a client, meaning you'll need a server to connect to.
 
-For local testing, OwlTree provides a simple relay server you can download from [here](https://github.com/CaptainToTo/owl-tree/releases/download/v0.2.0/SimpleRelayServer-v0.2.0.zip). This is a separate C#
-program that runs on the .NET runtime. You can start the server by opening a terminal in the server project folder,
-and running:
+For local testing, OwlTree provides a simple relay server you can download from [here](https://github.com/CaptainToTo/owltree-relays/releases). This is a separate C#
+program that runs on the .NET runtime. You can start the server by opening a terminal in the server project folder, and running:
 
 ```
 > dotnet run
